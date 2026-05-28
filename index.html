@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>跨时空足球比赛虚拟模拟器</title>
+    <style>
+        :root {
+            --primary-color: #2e7d32;
+            --secondary-color: #f57c00;
+            --dark-bg: #1b1f1c;
+            --card-bg: #242926;
+            --text-light: #e0e0e0;
+            --text-muted: #aaaaaa;
+            --accent: #d4af37;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text-light);
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding-bottom: 40px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 15px;
+        }
+
+        header h1 {
+            color: var(--accent);
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .author-tag {
+            color: var(--secondary-color);
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        /* 阶段面板控制 */
+        .panel {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+            margin-bottom: 25px;
+            border: 1px solid #333;
+        }
+
+        .hidden { display: none !important; }
+
+        /* 阶段1：选择界面 */
+        .setup-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        @media (max-width: 600px) {
+            .setup-grid { grid-template-columns: 1fr; }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+
+        input, select {
+            background-color: #111;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .btn:hover {
+            background-color: #388e3c;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary-color);
+        }
+        .btn-secondary:hover { background-color: #e65100; }
+
+        /* 阶段2：赛前前瞻 */
+        .preview-header {
+            text-align: center;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--accent);
+        }
+
+        .vs-box {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #1e3c1f, #2b1f1a);
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .vs-team {
+            text-align: center;
+            flex: 1;
+        }
+
+        .vs-team h2 { font-size: 2rem; color: #fff; }
+        .vs-circle {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent);
+            padding: 10px 20px;
+            border: 2px solid var(--accent);
+            border-radius: 50%;
+        }
+
+        .info-section {
+            margin-bottom: 20px;
+            border-bottom: 1px dashed #444;
+            padding-bottom: 15px;
+        }
+
+        .info-section h3 {
+            color: var(--secondary-color);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .lineup-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .lineup-list {
+            background-color: #1a1e1b;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        /* 阶段3：现场直播 */
+        .live-scorebar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #111;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            border: 1px solid var(--primary-color);
+        }
+
+        .live-clock {
+            color: var(--secondary-color);
+            font-family: monospace;
+            background: #222;
+            padding: 4px 10px;
+            border-radius: 4px;
+        }
+
+        .commentary-box {
+            background-color: #111;
+            border-radius: 8px;
+            height: 400px;
+            overflow-y: auto;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            border: 1px solid #333;
+        }
+
+        .commentary-line {
+            animation: fadeIn 0.5s ease-in-out forwards;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #222;
+        }
+
+        .c-time {
+            color: var(--secondary-color);
+            font-weight: bold;
+            margin-right: 10px;
+            font-family: monospace;
+        }
+
+        .c-text {}
+        .c-goal {
+            color: #ffeb3b;
+            background-color: rgba(244, 67, 54, 0.3);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            border-left: 4px solid #f44336;
+        }
+
+        /* 阶段4：赛后数据 */
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        .stats-table th, .stats-table td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #333;
+        }
+
+        .stats-table th { background-color: #1a1e1b; color: var(--accent); }
+        .stats-row-bg { background-color: #1c221e; }
+
+        .ratings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .ratings-grid { grid-template-columns: 1fr; }
+        }
+
+        .rating-card {
+            background-color: #1a1e1b;
+            padding: 15px;
+            border-radius: 8px;
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        .player-rate-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid #2d3530;
+            font-size: 0.9rem;
+        }
+
+        .p-score {
+            font-weight: bold;
+            color: #ffeb3b;
+        }
+
+        /* 底部挑战宣告 */
+        .challenge-banner {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #1a1e1b;
+            border-left: 5px solid var(--accent);
+            border-radius: 8px;
+            line-height: 1.8;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .challenge-title {
+            color: var(--accent);
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .challenge-text {
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>跨时空足球模拟器 (2026版)</h1>
+        <p class="author-tag">星巴作品（小红书：星巴野保探险家）</p>
+        <p style="color: var(--text-muted)">基于球队历史及2026年最新名单真实数据算法推算</p>
+    </header>
+
+    <!-- 阶段1：设定界面 -->
+    <div id="panel-setup" class="panel">
+        <div class="form-group" style="margin-bottom: 20px;">
+            <label for="match-name">赛事名称</label>
+            <input type="text" id="match-name" value="星巴明星杯 - 巅峰对决" placeholder="例如：2026年世界杯、欧冠决赛等">
+        </div>
+        
+        <div class="setup-grid">
+            <div class="form-group">
+                <label for="team-a">主队/球队A</label>
+                <select id="team-a">
+                    <optgroup label="全明星">
+                        <option value="星巴明星队" selected>星巴明星队 (全明星跨时空)</option>
+                    </optgroup>
+                    
+                    <!-- 2026年世界杯48强完整名单 -->
+                    <optgroup label="2026世界杯 - 东道主">
+                        <option value="美国">美国</option>
+                        <option value="墨西哥">墨西哥</option>
+                        <option value="加拿大">加拿大</option>
+                    </optgroup>
+                    <optgroup label="2026世界杯 - 欧洲区 (UEFA)">
+                        <option value="法国">法国</option>
+                        <option value="英格兰">英格兰</option>
+                        <option value="西班牙">西班牙</option>
+                        <option value="德国">德国</option>
+                        <option value="葡萄牙">葡萄牙</option>
+                        <option value="意大利">意大利</option>
+                        <option value="荷兰">荷兰</option>
+                        <option value="比利时">比利时</option>
+                        <option value="克罗地亚">克罗地亚</option>
+                        <option value="瑞士">瑞士</option>
+                        <option value="丹麦">丹麦</option>
+                        <option value="奥地利">奥地利</option>
+                        <option value="瑞典">瑞典</option>
+                        <option value="塞尔维亚">塞尔维亚</option>
+                        <option value="土耳其">土耳其</option>
+                        <option value="乌克兰">乌克兰</option>
+                    </optgroup>
+                    <optgroup label="2026世界杯 - 南美洲区 (CONMEBOL)">
+                        <option value="阿根廷">阿根廷</option>
+                        <option value="巴西">巴西</option>
+                        <option value="乌拉圭">乌拉圭</option>
+                        <option value="哥伦比亚">哥伦比亚</option>
+                        <option value="厄瓜多尔">厄瓜多尔</option>
+                        <option value="巴拉圭">巴拉圭</option>
+                        <option value="委内瑞拉">委内瑞拉</option>
+                    </optgroup>
+                    <optgroup label="2026世界杯 - 非洲区 (CAF)">
+                        <option value="摩洛哥">摩洛哥</option>
+                        <option value="塞内加尔">塞内加尔</option>
+                        <option value="埃及">埃及</option>
+                        <option value="阿尔及利亚">阿尔及利亚</option>
+                        <option value="科特迪瓦">科特迪瓦</option>
+                        <option value="喀麦隆">喀麦隆</option>
+                        <option value="尼日利亚">尼日利亚</option>
+                        <option value="加纳">加纳</option>
+                        <option value="南非">南非</option>
+                        <option value="突尼斯">突尼斯</option>
+                    </optgroup>
+                    <optgroup label="2026世界杯 - 亚洲区 (AFC)">
+                        <option value="日本">日本</option>
+                        <option value="韩国">韩国</option>
+                        <option value="伊朗">伊朗</option>
+                        <option value="澳大利亚">澳大利亚</option>
+                        <option value="沙特阿拉伯">沙特阿拉伯</option>
+                        <option value="卡塔尔">卡塔尔</option>
+                        <option value="乌兹别克斯坦">乌兹别克斯坦</option>
+                        <option value="伊拉克">伊拉克</option>
+                    </optgroup>
+                    <optgroup label="2026世界杯 - 中北美及大洋洲">
+                        <option value="哥斯达黎加">哥斯达黎加</option>
+                        <option value="巴拿马">巴拿马</option>
+                        <option value="牙买加">牙买加</option>
+                        <option value="新西兰">新西兰</option>
+                    </optgroup>
+
+                    <optgroup label="历史经典球队 (18支)">
+                        <option value="1984年法国队">1984年 法国队</option>
+                        <option value="1986年阿根廷队">1986年 阿根廷队</option>
+                        <option value="1988年荷兰队">1988年 荷兰队</option>
+                        <option value="1990年意大利队">1990年 意大利队</option>
+                        <option value="1990年阿根廷队">1990年 阿根廷队</option>
+                        <option value="1990年德国队">1990年 德国队</option>
+                        <option value="1990年巴西队">1990年 巴西队</option>
+                        <option value="1992年丹麦队">1992年 丹麦队</option>
+                        <option value="1993年尤文图斯队">1993年 尤文图斯队</option>
+                        <option value="1994年意大利队">1994年 意大利队</option>
+                        <option value="1994年巴西队">1994年 巴西队</option>
+                        <option value="1998年法国队">1998年 法国队</option>
+                        <option value="1998年巴西队">1998年 巴西队</option>
+                        <option value="2002年巴西队">2002年 巴西队</option>
+                        <option value="2006年意大利队">2006年 意大利队</option>
+                        <option value="2010年西班牙队">2010年 西班牙队</option>
+                        <option value="2014年德国队">2014年 德国队</option>
+                        <option value="2018年法国队">2018年 法国队</option>
+                        <option value="2022年阿根廷队">2022年 阿根廷队</option>
+                    </optgroup>
+                    
+                    <optgroup label="俱乐部及其他">
+                        <option value="中国队">中国队 (情怀)</option>
+                        <option value="皇家马德里">皇家马德里</option>
+                        <option value="曼城">曼城</option>
+                        <option value="巴黎圣日尔曼">巴黎圣日尔曼</option>
+                        <option value="巴塞罗那">巴塞罗那</option>
+                        <option value="拜仁慕尼黑">拜仁慕尼黑</option>
+                        <option value="国际米兰">国际米兰</option>
+                        <option value="阿森纳">阿森纳</option>
+                        <option value="重庆铜梁龙">重庆铜梁龙</option>
+                        <option value="成都蓉城">成都蓉城</option>
+                    </optgroup>
+                    
+                    <optgroup label="中国历史经典球队">
+                        <option value="1995年四川全兴队">1995年 四川全兴队</option>
+                        <option value="1999年广东宏远队">1999年 广东宏远队</option>
+                        <option value="2004年中国队">2004年 中国队 (亚洲杯亚军)</option>
+                    </optgroup>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="team-b">客队/球队B</label>
+                <select id="team-b">
+                    <optgroup label="全明星">
+                        <option value="星巴明星队">星巴明星队 (全明星跨时空)</option>
+                    </optgroup>
+                    
+                    <!-- 2026年世界杯48强完整名单 -->
+                    <optgroup label="2026世界杯 - 东道主">
+                        <option value="美国">美国</option>
+                        <option value="墨西哥">墨西哥</option>
+                        <option value="加拿大">加拿大</option>
+                    </optgroup>
+                    <optgroup label="2026世界杯 - 欧洲区 (UEFA)">
+                        <option value="法国">法国</option>
+                        <option value="英格兰" selected>英格兰</option>
+                        <option value="西班牙">西班牙</option>
+                        <option value="德国">德国</option>
+                        <option value="葡萄牙">葡萄牙</option>
+                        <option value="意大利">意大利</option>
+                        <option value="荷兰">荷兰</option>
+                        <option value="比利时">比利时</option>
+                        <option value="克罗地亚">克罗地亚</option>
+                        <option value="瑞士">瑞士</option>
+                        <option value="丹麦">丹麦</option>
+                        <option value="奥地利">奥地利</option>
+                        <option value="瑞典">瑞典</option>
+                        <option value="塞尔维亚">塞尔维亚</option>
+                        <option value="土耳其">土耳其</option>
+                        <option value="乌克兰">乌克兰</option>
+                    </optgroup>
+                    <optgroup label="2026世界杯 - 南美洲区 (CONMEBOL)">
+                        <option value="阿根廷">阿根廷</option>
+                        <option value="巴西">巴西</option>
+                        <option value="乌拉圭">乌拉圭</option>
+                        <option value="哥伦比亚">哥伦比亚</option>
+                        <option value="厄瓜多尔">厄瓜多尔</option>
+                        <option value="巴拉圭">巴拉圭</option>
+                        <option value="委内瑞拉">委内瑞拉</option>
+                    </optgroup>
+                    <optgroup label="2026世界杯 - 非洲区 (CAF)">
+                        <option value="摩洛哥">摩洛哥</option>
+                        <option value="塞内加尔">塞内加尔</option>
+                        <option value="埃及">埃及</option>
+                        <option value="阿尔及利亚">阿尔及利亚</option>
+                        <option value="科特迪瓦">科特迪瓦</option>
+                        <option value="喀麦隆">喀麦隆</option>
+                        <option value="尼日利亚">尼日利亚</option>
+                        <option value="加纳">加纳</option>
+                        <option value="南非">南非</option>
+                        <option value="突尼斯">突尼斯</option>
+                    </optgroup>
+                    <optgroup label="2026世界杯 - 亚洲区 (AFC)">
+                        <option value="日本">日本</option>
+                        <option value="韩国">韩国</option>
+                        <option value="伊朗">伊朗</option>
+                        <option value="澳大利亚">澳大利亚</option>
+                        <option value="沙特阿拉伯">沙特阿拉伯</option>
+                        <option value="卡塔尔">卡塔尔</option>
+                        <option value="乌兹别克斯坦">乌兹别克斯坦</option>
+                        <option value="伊拉克">伊拉克</option>
+                    </optgroup>
+                    <optgroup label="2026世界杯 - 中北美及大洋洲">
+                        <option value="哥斯达黎加">哥斯达黎加</option>
+                        <option value="巴拿马">巴拿马</option>
+                        <option value="牙买加">牙买加</option>
+                        <option value="新西兰">新西兰</option>
+                    </optgroup>
+
+                    <optgroup label="历史经典球队 (18支)">
+                        <option value="1984年法国队">1984年 法国队</option>
+                        <option value="1986年阿根廷队">1986年 阿根廷队</option>
+                        <option value="1988年荷兰队">1988年 荷兰队</option>
+                        <option value="1990年意大利队">1990年 意大利队</option>
+                        <option value="1990年阿根廷队">1990年 阿根廷队</option>
+                        <option value="1990年德国队">1990年 德国队</option>
+                        <option value="1990年巴西队">1990年 巴西队</option>
+                        <option value="1992年丹麦队">1992年 丹麦队</option>
+                        <option value="1993年尤文图斯队">1993年 尤文图斯队</option>
+                        <option value="1994年意大利队">1994年 意大利队</option>
+                        <option value="1994年巴西队">1994年 巴西队</option>
+                        <option value="1998年法国队">1998年 法国队</option>
+                        <option value="1998年巴西队">1998年 巴西队</option>
+                        <option value="2002年巴西队">2002年 巴西队</option>
+                        <option value="2006年意大利队">2006年 意大利队</option>
+                        <option value="2010年西班牙队">2010年 西班牙队</option>
+                        <option value="2014年德国队">2014年 德国队</option>
+                        <option value="2018年法国队">2018年 法国队</option>
+                        <option value="2022年阿根廷队">2022年 阿根廷队</option>
+                    </optgroup>
+                    
+                    <optgroup label="俱乐部及其他">
+                        <option value="中国队">中国队 (情怀)</option>
+                        <option value="皇家马德里">皇家马德里</option>
+                        <option value="曼城">曼城</option>
+                        <option value="巴黎圣日尔曼">巴黎圣日尔曼</option>
+                        <option value="巴塞罗那">巴塞罗那</option>
+                        <option value="拜仁慕尼黑">拜仁慕尼黑</option>
+                        <option value="国际米兰">国际米兰</option>
+                        <option value="阿森纳">阿森纳</option>
+                        <option value="重庆铜梁龙">重庆铜梁龙</option>
+                        <option value="成都蓉城">成都蓉城</option>
+                    </optgroup>
+
+                    <optgroup label="中国历史经典球队">
+                        <option value="1995年四川全兴队">1995年 四川全兴队</option>
+                        <option value="1999年广东宏远队">1999年 广东宏远队</option>
+                        <option value="2004年中国队">2004年 中国队 (亚洲杯亚军)</option>
+                    </optgroup>
+                </select>
+            </div>
+        </div>
+        <button class="btn" onclick="generatePreview()">生成赛前前瞻</button>
+    </div>
+
+    <!-- 阶段2：赛前前瞻 -->
+    <div id="panel-preview" class="panel hidden">
+        <div class="preview-header" id="txt-preview-title">赛事前瞻</div>
+        <div class="vs-box">
+            <div class="vs-team"><h2 id="view-team-a">阿根廷</h2></div>
+            <div class="vs-circle">VS</div>
+            <div class="vs-team"><h2 id="view-team-b">法国</h2></div>
+        </div>
+
+        <div class="info-section">
+            <h3>📊 实力对比</h3>
+            <p id="info-strength"></p>
+        </div>
+        <div class="info-section">
+            <h3>⚔️ 传统阵型与打法</h3>
+            <p id="info-tactics"></p>
+        </div>
+        <div class="info-section">
+            <h3>⭐ 关键核心人物</h3>
+            <p id="info-stars"></p>
+        </div>
+        <div class="info-section">
+            <h3>📋 预测首发名单</h3>
+            <div class="lineup-container">
+                <div class="lineup-list" id="lineup-a"></div>
+                <div class="lineup-list" id="lineup-b"></div>
+            </div>
+        </div>
+        <div class="info-section">
+            <h3>📰 模拟媒体预测</h3>
+            <p id="info-media-pred" style="font-style: italic; color: var(--accent);"></p>
+        </div>
+
+        <button class="btn btn-secondary" onclick="startLiveMatch()">进入现场，鸣哨开球！</button>
+    </div>
+
+    <!-- 阶段3：现场直播 -->
+    <div id="panel-live" class="panel hidden">
+        <div class="live-scorebar">
+            <span id="live-name-a">阿根廷</span>
+            <span id="live-score">0 - 0</span>
+            <span id="live-name-b">法国</span>
+            <span class="live-clock" id="live-clock">00:00</span>
+        </div>
+        <div class="commentary-box" id="commentary-box">
+            <!-- 动态生成直播文本 -->
+        </div>
+        <button id="btn-to-post" class="btn hidden" style="margin-top:20px;" onclick="showPostMatch()">查看赛后详细报告</button>
+    </div>
+
+    <!-- 阶段4：赛后报告 -->
+    <div id="panel-post" class="panel hidden">
+        <div class="preview-header" style="color: var(--secondary-color);">🏁 比赛全场全终</div>
+        
+        <div class="info-section">
+            <h3>📊 核心技术统计</h3>
+            <table class="stats-table" id="stats-table">
+                <!-- 动态数据表格 -->
+            </table>
+        </div>
+
+        <div class="info-section">
+            <h3>🎖️ 球员评分与赛后评价</h3>
+            <div class="ratings-grid">
+                <div class="rating-card">
+                    <h4 id="rate-title-a" style="color:var(--accent); margin-bottom:10px;"></h4>
+                    <div id="rate-list-a"></div>
+                </div>
+                <div class="rating-card">
+                    <h4 id="rate-title-b" style="color:var(--accent); margin-bottom:10px;"></h4>
+                    <div id="rate-list-b"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h3>🎤 舆论与媒体全方位评价</h3>
+            <p id="post-media-review" style="background: #111; padding: 15px; border-radius: 6px; border-left: 4px solid var(--secondary-color);"></p>
+        </div>
+
+        <button class="btn" onclick="resetSimulator()">再来一场虚拟推算</button>
+    </div>
+
+    <!-- 底部挑战宣告 -->
+    <div class="challenge-banner">
+        <div class="challenge-title">⚔️ 欢迎挑战星巴明星队</div>
+        <div class="challenge-text">
+            阵型：4231，卢卡·托尼（单前锋），巴乔（拖后影锋），贝尔（左前卫），布莱恩·劳德鲁普（右前卫），坎特和皮尔洛（双后腰），卡洛斯（左边卫），巴雷西（左中卫），范迪克（右中位），图拉姆（右边卫），卡恩（守门员）。前场任意球：巴乔，点球：巴乔，角球：巴乔（直接找卢卡·托尼）。
+        </div>
+    </div>
+</div>
+
+<script>
+    const teamDatabase = {
+        // --- 星巴专属阵型 ---
+        "星巴明星队": { strength: 99, formation: "4-2-3-1", style: "坎特单人拖后扫荡，皮尔洛频送直塞找前场。两翼齐飞：贝尔狂暴带球突破打门，劳德鲁普内切短传策应。卢卡·托尼做桥头堡支点频频做球。巴乔免除防守任务，专职突入禁区诱导犯规并包揽一切前场任意球与点球（角球固定连线托尼）。", stars: "巴乔 (Roberto Baggio) - 队长/影锋，拥有无限开火权与绝对核心地位的忧郁王子。", squad: ["卡恩", "图拉姆", "范迪克", "巴雷西", "卡洛斯", "坎特", "皮尔洛", "布莱恩-劳德鲁普", "巴乔 (C)", "贝尔", "卢卡-托尼"] },
+        
+        // --- 2026 世界杯 48 强 ---
+        // 东道主
+        "美国": { strength: 84, formation: "4-3-3", style: "东道主光环，年轻一代的青春风暴与高位逼抢", stars: "普利西奇 (Christian Pulisic)", squad: ["特纳", "德斯特", "理查兹", "里姆", "罗宾逊", "麦肯尼", "亚当斯", "穆萨", "维阿", "巴洛贡", "普利西奇"] },
+        "墨西哥": { strength: 82, formation: "4-3-3", style: "技术细腻，主场作战极具激情", stars: "希门尼斯 (Raúl Jiménez)", squad: ["奥乔亚", "桑切斯", "蒙特斯", "巴斯克斯", "加利亚多", "阿尔瓦雷斯", "查韦斯", "皮内达", "洛萨诺", "希门尼斯", "安图尼亚"] },
+        "加拿大": { strength: 81, formation: "3-4-2-1", style: "利用阿方索·戴维斯等速度型球员进行极速反击", stars: "阿方索·戴维斯 (Alphonso Davies)", squad: ["博扬", "约翰斯顿", "维多利亚", "米勒", "布坎南", "欧斯塔基奥", "科内", "阿方索-戴维斯", "大卫", "拉林", "霍伊莱特"] },
+        
+        // UEFA 欧洲
+        "法国": { strength: 94, formation: "4-3-3", style: "立体化进攻与极具压迫感的防守转换，两翼齐飞", stars: "姆巴佩 (Kylian Mbappé)", squad: ["迈尼昂", "孔德", "萨利巴", "古斯托", "特奥-埃尔南德斯", "楚阿梅尼", "卡马文加", "坎特", "登贝莱", "姆巴佩", "图拉姆"] },
+        "英格兰": { strength: 93, formation: "4-2-3-1", style: "豪华阵容，两翼齐飞与中路贝林厄姆的前插", stars: "贝林厄姆 (Jude Bellingham)", squad: ["皮克福德", "沃克", "斯通斯", "格伊", "肖", "赖斯", "阿诺德", "萨卡", "贝林厄姆", "福登", "凯恩"] },
+        "西班牙": { strength: 94, formation: "4-3-3", style: "新生代传控，两翼拥有极强突破能力", stars: "亚马尔 (Lamine Yamal)", squad: ["乌奈-西蒙", "卡瓦哈尔", "勒诺尔芒", "拉波尔特", "库库雷利亚", "罗德里", "佩德里", "法比安", "亚马尔", "莫拉塔", "尼科-威廉姆斯"] },
+        "德国": { strength: 93, formation: "4-2-3-1", style: "少帅纳格尔斯曼治下的高压控球与快速穿插", stars: "穆西亚拉 (Jamal Musiala)", squad: ["特尔施特根", "基米希", "吕迪格", "塔", "米特尔施塔特", "安德里希", "帕夫洛维奇", "萨内", "京多安", "穆西亚拉", "哈弗茨"] },
+        "葡萄牙": { strength: 92, formation: "4-3-3", style: "前场天赋溢出，依靠B费和B席的组织创造杀机", stars: "布鲁诺·费尔南德斯 (B. Fernandes)", squad: ["迪奥戈-科斯塔", "坎塞洛", "迪亚斯", "伊纳西奥", "门德斯", "帕利尼亚", "维蒂尼亚", "B费", "B席", "C罗", "莱奥"] },
+        "意大利": { strength: 89, formation: "4-3-3", style: "传统防守底蕴结合现代控球，整体性强", stars: "巴雷拉 (Nicolò Barella)", squad: ["多纳鲁马", "迪洛伦佐", "巴斯托尼", "卡拉菲奥里", "迪马尔科", "若日尼奥", "巴雷拉", "弗拉泰西", "基耶萨", "斯卡马卡", "佩莱格里尼"] },
+        "荷兰": { strength: 90, formation: "3-4-2-1", style: "三中卫体系，边翼卫大幅插上参与进攻", stars: "范迪克 (Virgil van Dijk)", squad: ["维尔布鲁根", "德里赫特", "范迪克", "阿克", "邓弗里斯", "斯豪滕", "赖因德斯", "盲德", "西蒙斯", "加克波", "德佩"] },
+        "比利时": { strength: 88, formation: "4-3-3", style: "德布劳内的致命传球与多库的爆破", stars: "德布劳内 (Kevin De Bruyne)", squad: ["卡斯特尔斯", "卡斯塔涅", "法斯", "维尔通亨", "蒂特", "奥纳纳", "曼加拉", "德布劳内", "多库", "卢卡库", "特罗萨德"] },
+        "克罗地亚": { strength: 86, formation: "4-3-3", style: "中场铁三角的极限控场与坚韧意志", stars: "莫德里奇 (Luka Modrić)", squad: ["利瓦科维奇", "斯塔尼西奇", "舒塔洛", "格瓦迪奥尔", "索萨", "布罗佐维奇", "科瓦契奇", "莫德里奇", "马耶尔", "克拉马里奇", "佩里西奇"] },
+        "瑞士": { strength: 85, formation: "3-4-2-1", style: "扎卡坐镇中场，战术纪律极强", stars: "扎卡 (Granit Xhaka)", squad: ["索默", "舍尔", "阿坎吉", "罗德里格斯", "威德默", "弗罗伊勒", "扎卡", "埃贝彻尔", "沙奇里", "恩博洛", "巴尔加斯"] },
+        "丹麦": { strength: 84, formation: "3-4-1-2", style: "埃里克森梳理进攻，强悍的身体对抗", stars: "埃里克森 (Christian Eriksen)", squad: ["舒梅切尔", "克里斯滕森", "克亚尔", "韦斯特高", "亚历山大-巴", "霍伊别尔", "德莱尼", "梅勒", "埃里克森", "霍伊伦", "温德"] },
+        "奥地利": { strength: 85, formation: "4-2-3-1", style: "朗尼克治下的极致高位压迫", stars: "萨比策 (Marcel Sabitzer)", squad: ["彭茨", "波施", "丹索", "林哈特", "姆韦内", "赛瓦尔德", "莱默尔", "鲍姆加特纳", "萨比策", "施密德", "阿瑙托维奇"] },
+        "瑞典": { strength: 83, formation: "4-4-2", style: "北欧铁血防守与伊萨克的冲击", stars: "伊萨克 (Alexander Isak)", squad: ["奥尔森", "克拉夫特", "林德洛夫", "希恩", "奥古斯丁松", "库卢塞夫斯基", "卡尔斯特罗姆", "斯万贝里", "福斯贝里", "伊萨克", "吉奥克雷斯"] },
+        "塞尔维亚": { strength: 83, formation: "3-4-2-1", style: "高空轰炸与硬朗球风", stars: "米特罗维奇 (A. Mitrović)", squad: ["拉伊科维奇", "米伦科维奇", "维利科维奇", "帕夫洛维奇", "日夫科维奇", "古德利", "米林科维奇", "科斯蒂奇", "塔迪奇", "弗拉霍维奇", "米特罗维奇"] },
+        "土耳其": { strength: 84, formation: "4-2-3-1", style: "居莱尔领衔的青春风暴，极具创造力", stars: "居莱尔 (Arda Güler)", squad: ["居诺克", "穆尔迪尔", "阿卡伊丁", "巴尔达克奇", "卡迪奥卢", "厄兹詹", "恰尔汗奥卢", "居莱尔", "柯克曲", "伊尔迪兹", "伊尔马兹"] },
+        "乌克兰": { strength: 82, formation: "4-3-3", style: "顽强的拼搏精神与两翼快速突击", stars: "穆德里克 (Mykhailo Mudryk)", squad: ["特鲁宾", "科诺普利亚", "扎巴尔尼", "马特维延科", "津琴科", "斯捷潘年科", "苏达科夫", "马利诺夫斯基", "齐甘科夫", "多夫比克", "穆德里克"] },
+
+        // CONMEBOL 南美洲
+        "阿根廷": { strength: 92, formation: "4-3-3", style: "传控渗透与硬度兼具，围绕核心进行快速前插与防守反击", stars: "梅西 (Lionel Messi)", squad: ["马丁内斯", "莫利纳", "罗梅罗", "奥塔门迪", "塔利亚菲科", "瓦雷拉", "恩佐-费尔南德斯", "麦卡利斯特", "梅西", "阿尔瓦雷斯", "加纳乔"] },
+        "巴西": { strength: 92, formation: "4-2-3-1", style: "安切洛蒂治下的桑巴军团，兼具欧洲战术纪律与南美个人天赋", stars: "内马尔 & 维尼修斯", squad: ["阿利松", "达尼洛", "马尔基尼奥斯", "加布里埃尔", "道格拉斯-桑托斯", "吉马良斯", "卡塞米罗", "帕奎塔", "拉菲尼亚", "内马尔", "维尼修斯"] },
+        "乌拉圭": { strength: 88, formation: "4-3-3", style: "贝尔萨的疯狂逼抢与高节奏攻防", stars: "巴尔韦德 (Federico Valverde)", squad: ["罗切特", "南德斯", "阿劳霍", "希门尼斯", "比尼亚", "乌加特", "巴尔韦德", "德拉克鲁兹", "佩利斯特里", "努涅斯", "阿劳霍"] },
+        "哥伦比亚": { strength: 87, formation: "4-2-3-1", style: "J罗的上帝视角与路易斯·迪亚斯的爆破", stars: "路易斯·迪亚斯 (Luis Díaz)", squad: ["巴尔加斯", "穆尼奥斯", "桑切斯", "卢库米", "莫希卡", "莱尔马", "里奥斯", "阿里亚斯", "J罗", "迪亚斯", "博雷"] },
+        "厄瓜多尔": { strength: 85, formation: "4-3-3", style: "凯塞多镇守中场，极具运动能力", stars: "凯塞多 (Moisés Caicedo)", squad: ["多明格斯", "普雷西亚多", "托雷斯", "因卡皮耶", "埃斯图皮尼安", "格鲁埃索", "凯塞多", "派斯", "弗兰科", "瓦伦西亚", "萨米恩托"] },
+        "巴拉圭": { strength: 81, formation: "4-4-2", style: "南美传统铁血防守，球风凶悍", stars: "阿尔米隆 (Miguel Almirón)", squad: ["科罗内尔", "卡塞雷斯", "戈麦斯", "巴尔武埃纳", "埃斯皮诺萨", "比利亚桑蒂", "库巴斯", "罗哈斯", "阿尔米隆", "萨纳夫里亚", "恩西索"] },
+        "委内瑞拉": { strength: 80, formation: "4-2-3-1", style: "防守反击，龙东在锋线的绝对支点", stars: "龙东 (Salomón Rondón)", squad: ["罗莫", "冈萨雷斯", "奥索里奥", "安赫尔", "纳瓦罗", "埃雷拉", "马丁内斯", "马奇斯", "索特尔多", "萨瓦里诺", "龙东"] },
+
+        // CAF 非洲
+        "摩洛哥": { strength: 87, formation: "4-3-3", style: "严密的防守体系与阿什拉夫的右路走廊", stars: "阿什拉夫 (Achraf Hakimi)", squad: ["布努", "阿什拉夫", "阿格尔德", "赛斯", "马兹拉维", "阿姆拉巴特", "欧纳希", "阿马拉", "齐耶赫", "恩内斯里", "布法尔"] },
+        "塞内加尔": { strength: 86, formation: "4-3-3", style: "非洲雄狮，身体素质与技术的完美结合", stars: "马内 (Sadio Mané)", squad: ["门迪", "萨巴利", "库利巴利", "迪亚洛", "雅各布斯", "盖耶", "门迪", "萨尔", "恩迪亚耶", "杰克逊", "马内"] },
+        "埃及": { strength: 83, formation: "4-3-3", style: "全队围绕萨拉赫打造的高效反击", stars: "萨拉赫 (Mohamed Salah)", squad: ["谢纳维", "哈尼", "阿卜杜勒莫南", "赫加齐", "法图", "埃尔内尼", "阿特亚", "法蒂", "萨拉赫", "穆斯塔法", "特雷泽盖"] },
+        "阿尔及利亚": { strength: 82, formation: "4-3-3", style: "马赫雷斯的边路内切与中场硬度", stars: "马赫雷斯 (Riyad Mahrez)", squad: ["曼德里亚", "阿塔尔", "本塞拜尼", "曼迪", "艾特-努里", "本纳塞尔", "本塔莱布", "奥亚尔", "马赫雷斯", "布内贾", "本拉赫马"] },
+        "科特迪瓦": { strength: 84, formation: "4-3-3", style: "非洲杯冠军底蕴，中场极具统治力", stars: "凯西 (Franck Kessié)", squad: ["福法纳", "辛戈", "迪奥曼德", "恩迪卡", "科南", "塞里", "凯西", "福法纳", "佩佩", "阿莱", "阿丁格拉"] },
+        "喀麦隆": { strength: 81, formation: "4-3-3", style: "猎豹的速度与禁区内的抢点", stars: "阿布巴卡尔 (V. Aboubakar)", squad: ["奥纳纳", "卡斯特列托", "穆库迪", "冈萨雷斯", "图洛", "安古伊萨", "昆德", "恩查姆", "姆贝乌莫", "阿布巴卡尔", "埃卡姆比"] },
+        "尼日利亚": { strength: 85, formation: "4-4-2", style: "奥斯梅恩领衔的恐怖锋线群", stars: "奥斯梅恩 (Victor Osimhen)", squad: ["恩瓦巴利", "埃纳", "特罗斯特-埃孔", "阿贾伊", "扎伊杜", "奥涅卡", "伊沃比", "丘库埃泽", "卢克曼", "博尼法斯", "奥斯梅恩"] },
+        "加纳": { strength: 80, formation: "4-2-3-1", style: "托马斯的远射与库杜斯的灵动", stars: "库杜斯 (Mohammed Kudus)", squad: ["阿蒂-齐吉", "兰普泰", "阿马泰", "吉库", "门萨", "托马斯", "萨梅德", "库杜斯", "阿尤", "潘特希尔", "伊尼亚基-威廉斯"] },
+        "南非": { strength: 78, formation: "4-2-3-1", style: "本土球员为主，极具默契的团队配合", stars: "塔乌 (Percy Tau)", squad: ["威廉姆斯", "穆道", "科卡纳", "姆瓦拉", "莫迪巴", "莫科纳", "西托莱", "塔乌", "兹瓦内", "马塞科", "马克戈帕"] },
+        "突尼斯": { strength: 79, formation: "4-3-3", style: "北非劲旅，战术执行力极强", stars: "斯希里 (Ellyes Skhiri)", squad: ["达门", "克奇里达", "梅利亚", "塔尔比", "马鲁尔", "斯希里", "莱杜尼", "本-罗姆达内", "姆萨克尼", "贾齐里", "阿舒尔"] },
+
+        // AFC 亚洲
+        "日本": { strength: 86, formation: "4-2-3-1", style: "亚洲传控天花板，三笘薰与久保建英的两翼齐飞", stars: "三笘薰 (Kaoru Mitoma)", squad: ["铃木彩艳", "菅原由势", "板仓滉", "富安健洋", "伊藤洋辉", "远藤航", "守田英正", "伊东纯也", "久保建英", "三笘薰", "上田绮世"] },
+        "韩国": { strength: 84, formation: "4-2-3-1", style: "孙兴慜的致命终结与李刚仁的突破", stars: "孙兴慜 (Son Heung-min)", squad: ["赵贤祐", "薛英佑", "金玟哉", "金英权", "李记帝", "黄仁范", "朴镕宇", "李刚仁", "李在城", "黄喜灿", "孙兴慜"] },
+        "伊朗": { strength: 82, formation: "4-4-2", style: "亚洲铁骑，塔雷米与阿兹蒙的锋线双煞", stars: "塔雷米 (Mehdi Taremi)", squad: ["贝兰万德", "雷扎伊安", "卡纳尼", "哈里扎德", "哈吉萨菲", "埃扎托拉希", "戈多斯", "贾汉巴赫什", "莫赫比", "阿兹蒙", "塔雷米"] },
+        "澳大利亚": { strength: 80, formation: "4-4-2", style: "澳洲力量，高空球与长传冲吊", stars: "苏塔 (Harry Souttar)", squad: ["马修-瑞恩", "阿特金森", "苏塔", "罗尔斯", "贝希奇", "欧文", "巴克斯", "博伊尔", "古德温", "杜克", "麦格里"] },
+        "沙特阿拉伯": { strength: 79, formation: "3-5-2", style: "防守体系与细腻脚下技术的结合", stars: "达瓦萨里 (Salem Al-Dawsari)", squad: ["奥韦斯", "坦巴克蒂", "布莱希", "卡迪什", "阿卜杜勒哈米德", "卡诺", "马尔基", "纳吉", "多萨里", "达瓦萨里", "布赖坎"] },
+        "卡塔尔": { strength: 78, formation: "3-5-2", style: "亚洲杯冠军的默契配合与阿菲夫的个人秀", stars: "阿菲夫 (Akram Afif)", squad: ["巴尔沙姆", "拉维", "胡希", "门德斯", "罗-佩德罗", "法特希", "海多斯", "阿卜杜勒萨拉姆", "瓦德", "莫埃兹-阿里", "阿菲夫"] },
+        "乌兹别克斯坦": { strength: 77, formation: "3-4-2-1", style: "中亚狼的硬朗作风与快速反击", stars: "肖穆罗多夫 (E. Shomurodov)", squad: ["尤苏波夫", "胡桑诺夫", "阿舒尔马托夫", "阿利库洛夫", "阿里若诺夫", "舒库罗夫", "哈姆罗别科夫", "赛义菲耶夫", "法伊祖拉耶夫", "马沙里波夫", "肖穆罗多夫"] },
+        "伊拉克": { strength: 76, formation: "4-2-3-1", style: "美索不达米亚雄狮的顽强斗志", stars: "艾曼·侯赛因 (Aymen Hussein)", squad: ["哈桑", "阿里", "纳蒂克", "苏拉卡", "多斯基", "阿马里", "拉希德", "巴耶什", "阿里-贾西姆", "尤西夫-阿明", "侯赛因"] },
+
+        // CONCACAF & OFC 中北美及大洋洲
+        "哥斯达黎加": { strength: 77, formation: "5-4-1", style: "稳固的五后卫防守体系与反击", stars: "纳瓦斯 (Keylor Navas)", squad: ["纳瓦斯", "弗勒尔", "杜阿尔特", "卡尔沃", "巴尔加斯", "奥维多", "博尔赫斯", "特赫达", "坎贝尔", "萨莫拉", "乌加尔德"] },
+        "巴拿马": { strength: 76, formation: "3-4-2-1", style: "中北美黑马，极强的跑动能力", stars: "卡拉斯基利亚 (A. Carrasquilla)", squad: ["莫斯克拉", "埃斯科巴", "科尔多巴", "安德拉德", "穆里略", "马丁内斯", "卡拉斯基利亚", "戴维斯", "巴塞纳斯", "迪亚斯", "法哈多"] },
+        "牙买加": { strength: 78, formation: "4-4-2", style: "拥有英超级别的锋线速度", stars: "安东尼奥 (Michail Antonio)", squad: ["布莱克", "伦比基萨", "平诺克", "伯纳德", "贝尔", "拉蒂博迪埃", "帕尔默", "里德", "格雷", "贝利", "安东尼奥"] },
+        "新西兰": { strength: 74, formation: "4-3-3", style: "大洋洲霸主，英式长传冲吊", stars: "克里斯·伍德 (Chris Wood)", squad: ["赛尔", "佩恩", "图伊洛马", "平纳克", "卡卡塞", "贝尔", "加贝特", "斯塔梅尼奇", "辛格", "麦考瓦特", "伍德"] },
+
+        // --- 历史经典球队 (18支) ---
+        "1984年法国队": { strength: 94, formation: "4-4-2 (魔幻方阵)", style: "普拉蒂尼领衔的艺术足球", stars: "普拉蒂尼", squad: ["巴茨", "巴蒂斯通", "博西斯", "勒鲁", "多梅格", "费尔南德斯", "蒂加纳", "吉雷瑟", "普拉蒂尼", "贝隆", "拉孔布"] },
+        "1986年阿根廷队": { strength: 96, formation: "3-5-2", style: "围绕马拉多纳的坚韧战术体系", stars: "马拉多纳", squad: ["蓬皮杜", "库丘福", "布朗", "鲁杰里", "朱斯蒂", "巴蒂斯塔", "恩里克", "奥拉尔蒂科埃切亚", "布鲁查加", "马拉多纳", "巴尔达诺"] },
+        "1988年荷兰队": { strength: 95, formation: "4-4-2", style: "全攻全守的进化版，三剑客巅峰", stars: "范巴斯滕", squad: ["范布鲁克伦", "凡蒂格伦", "里杰卡尔德", "罗纳德·科曼", "范阿莱", "沃特斯", "穆伦", "埃尔文·科曼", "古利特", "范巴斯滕", "基夫特"] },
+        "1990年意大利队": { strength: 93, formation: "4-4-2", style: "链式防守，巴乔与斯基拉奇的灵光", stars: "巴乔", squad: ["曾加", "贝尔戈米", "巴雷西", "费里", "马尔蒂尼", "多纳多尼", "德那波利", "贾尼尼", "德阿戈斯蒂尼", "巴乔", "斯基拉奇"] },
+        "1990年阿根廷队": { strength: 91, formation: "3-5-2", style: "极其强硬的防守反击与戈耶切亚的神奇", stars: "马拉多纳", squad: ["戈耶切亚", "西蒙", "蒙松", "鲁杰里", "巴苏阿尔多", "布鲁查加", "卡尔德隆", "特罗格里奥", "奥拉尔蒂科埃切亚", "马拉多纳", "卡尼吉亚"] },
+        "1990年德国队": { strength: 96, formation: "5-3-2", style: "钢铁意志与三驾马车", stars: "马特乌斯", squad: ["伊尔格纳", "贝特霍尔德", "科勒", "奥根塔勒", "布赫瓦尔德", "布雷默", "哈斯勒", "马特乌斯", "利特巴尔斯基", "克林斯曼", "沃勒尔"] },
+        "1990年巴西队": { strength: 90, formation: "3-5-2", style: "实用主义防守与个人闪光", stars: "卡雷卡", squad: ["塔法雷尔", "尤尔金霍", "莫泽尔", "毛罗·加尔旺", "里卡多·罗查", "布兰科", "邓加", "阿莱芒", "瓦尔多", "穆勒", "卡雷卡"] },
+        "1992年丹麦队": { strength: 88, formation: "5-3-2", style: "坚固防守与高效反击的童话", stars: "舒梅切尔", squad: ["舒梅切尔", "西维贝克", "尼尔森", "奥尔森", "克里斯托弗森", "安德森", "简森", "维尔福特", "拉尔森", "波尔森", "布莱恩·劳德鲁普"] },
+        "曼城": { 
+            strength: 95, 
+            formation: "3-2-4-1", 
+            style: "极致传控，高位压迫，高强度控球率，通过肋部穿插撕扯防线", 
+            stars: "哈兰德 (Erling Haaland) - 禁区内的超级高效进球机器", 
+            squad: ["埃德森", "沃克", "鲁本-迪亚斯", "格瓦迪奥尔", "罗德里", "斯通斯", "伯纳多-席尔瓦", "德布劳内", "福登", "多库", "哈兰德"] 
+        }
+    };
+
+    const actionTexts = [
+        "足球场上，牵一发而动全身。{team}在中场展开精妙短传配合，这脚传球犹如手术刀一般精准，{player}顺势杀入禁区！",
+        "{team}打出快速反击！{player}在边路风驰电掣，犹如一道闪电划破了夜空，撕裂了对方的防线！",
+        "{team}在前场觅得良机，{player}突然一脚势大力沉的远射！这球打得极具突然性！",
+        "{team}的核心球员{player}利用极其细腻的个人技术，如入无人之境，连续晃开了两名防守球员的重心！",
+        "这就是顶级球星的视野！{team}的{player}在人缝中送出一记极具想象力的挑传，传得太舒服了！",
+        "{team}获得前场绝佳位置的任意球，{player}站在球前，目光坚毅，百步穿杨的绝技要上演了吗？",
+        "{player}在边路完成了一次极其精彩的人球分过！现场球迷爆发出阵阵惊呼！"
+    ];
+    
+    // 星巴明星队专属解说动作词库 (融入黄健翔激情风格)
+    const simbaStarActions = [
+        "皮尔洛在中圈附近敏锐地捕捉到了前场转瞬即逝的空当，一脚极具想象力的贴地直塞，球像长了眼睛一样找到巴乔！",
+        "贝尔在左路得球，直接利用不讲理的速度生吃对方边后卫！传给两秒后的自己！内切后重炮轰门！",
+        "布莱恩-劳德鲁普右路极具灵性地内切，在狭小空间内倒三角短传，准确找到了游弋在禁区边缘的巴乔！",
+        "没有过不去的坎，只有过不去的坎特！坎特在后场像牛皮糖一样完成死亡缠绕精准抢断，稳稳控球，坚决不过中场！",
+        "卢卡-托尼在禁区内犹如重型坦克般倚住对方中卫，完美的支点做球，将球舒舒服服地回做给后排插上的巴乔！",
+        "巴乔带球突入禁区，极其聪明的节奏变化，如同跳着优雅的华尔兹，诱导对方后卫伸腿犯规！点球！裁判果断指响了哨子！巴乔亲自操刀主罚！",
+        "星巴明星队获得前场任意球，忧郁王子巴乔站在球前，助跑，起脚，皮球划出一道完美的彩虹弧线飞向球门！",
+        "星巴明星队获得战术角球！巴乔开出，皮球像巡航导弹一般精准找到了禁区内的高塔卢卡-托尼，托尼高高跃起泰山压顶头球攻门！"
+    ];
+
+    const saveTexts = [
+        "可惜皮球擦着立柱飞出底线！距离进球只差之毫厘，险些改变命运！",
+        "对方守门员立功了！一个世界级的飞身扑救，犹如天神下凡将这粒必进之球拒之门外！",
+        "后卫在门线上将球解围！伟大的防守！他拯救了球队！",
+        "嘭！皮球狠狠砸在了横梁上弹回场内！横梁挽救了球队，太遗憾了！",
+        "这球打得太正了，被守门员稳稳抱在怀中，进攻雷声大雨点小。"
+    ];
+
+    const goalTexts = [
+        "⚽ GOAL！！！球进了！！极其精彩的破门！",
+        "⚽ GOAL！！！伟大的一击！他不是一个人在战斗！这一刻他灵魂附体！门将毫无反应！",
+        "⚽ GOAL！！！犹如银瓶乍破水浆迸！绝佳的进球，全场球迷沸腾了！",
+        "⚽ GOAL！！！这球打进了绝对的死角！这是足球场上的一件艺术品！",
+        "⚽ GOAL！！！球进了！！这粒进球展现了无与伦比的个人英雄主义色彩！"
+    ];
+
+    let matchState = {
+        name: "", teamA: "", teamB: "",
+        scoreA: 0, scoreB: 0,
+        stats: {}, timeline: [],
+        dataA: null, dataB: null
+    };
+
+    function generatePreview() {
+        const tA = document.getElementById("team-a").value;
+        const tB = document.getElementById("team-b").value;
+        const mName = document.getElementById("match-name").value;
+
+        if (tA === tB) {
+            alert("请选择两支不同的球队进行对抗模拟！");
+            return;
+        }
+
+        matchState.name = mName;
+        matchState.teamA = tA;
+        matchState.teamB = tB;
+        matchState.dataA = teamDatabase[tA];
+        matchState.dataB = teamDatabase[tB];
+
+        document.getElementById("txt-preview-title").innerText = `【${mName}】官方赛前前瞻`;
+        document.getElementById("view-team-a").innerText = tA;
+        document.getElementById("view-team-b").innerText = tB;
+
+        const diff = matchState.dataA.strength - matchState.dataB.strength;
+        let strengthTxt = `${tA}战力评分 ${matchState.dataA.strength}，${tB}战力评分 ${matchState.dataB.strength}。`;
+        
+        if (tA === "星巴明星队" || tB === "星巴明星队") {
+            strengthTxt += "星巴明星队凭借着跨时空的梦幻阵容，在纸面实力上呈现出碾压态势。";
+        } else if (Math.abs(diff) <= 2) {
+            strengthTxt += "两队实力极其接近，胜负仅在毫厘之间。";
+        } else if (diff > 0) {
+            strengthTxt += `总体而言，${tA}纸面实力占据一定上风，控球面可能更宽。`;
+        } else {
+            strengthTxt += `总体而言，${tB}纸面实力更胜一筹，${tA}需要更具针对性的战术部署。`;
+        }
+        document.getElementById("info-strength").innerText = strengthTxt;
+
+        document.getElementById("info-tactics").innerHTML = `<b>${tA} (${matchState.dataA.formation})</b>: ${matchState.dataA.style}<br><b>${tB} (${matchState.dataB.formation})</b>: ${matchState.dataB.style}`;
+        document.getElementById("info-stars").innerHTML = `<b>${tA}</b>: ${matchState.dataA.stars}<br><b>${tB}</b>: ${matchState.dataB.stars}`;
+
+        document.getElementById("lineup-a").innerHTML = `<h4>${tA} 预计首发</h4>` + matchState.dataA.squad.join(" / ");
+        document.getElementById("lineup-b").innerHTML = `<h4>${tB} 预计首发</h4>` + matchState.dataB.squad.join(" / ");
+
+        let winProb = 50 + diff * 3;
+        winProb = Math.max(10, Math.min(95, winProb)); 
+        document.getElementById("info-media-pred").innerText = `《世界体育报》预测：基于多维算法推算，${tA}获胜概率为 ${winProb}%，${tB}获胜概率为 ${100 - winProb}%。`;
+
+        document.getElementById("panel-setup").classList.add("hidden");
+        document.getElementById("panel-preview").classList.remove("hidden");
+    }
+
+    function startLiveMatch() {
+        document.getElementById("panel-preview").classList.add("hidden");
+        document.getElementById("panel-live").classList.remove("hidden");
+
+        document.getElementById("live-name-a").innerText = matchState.teamA;
+        document.getElementById("live-name-b").innerText = matchState.teamB;
+        document.getElementById("live-score").innerText = "0 - 0";
+
+        const box = document.getElementById("commentary-box");
+        box.innerHTML = "";
+
+        matchState.scoreA = 0;
+        matchState.scoreB = 0;
+        matchState.timeline = [];
+
+        const probA = matchState.dataA.strength / (matchState.dataA.strength + matchState.dataB.strength);
+        matchState.stats = {
+            possessionA: Math.round(probA * 100 + (Math.random() * 10 - 5)),
+            shotsA: Math.round(probA * 20 * (Math.random() * 0.6 + 0.7)),
+            shotsB: Math.round((1 - probA) * 20 * (Math.random() * 0.6 + 0.7)),
+            keyPassesA: 0, keyPassesB: 0,
+            dribblesA: 0, dribblesB: 0
+        };
+        matchState.stats.possessionB = 100 - matchState.stats.possessionA;
+        matchState.stats.shotsOnTargetA = Math.round(matchState.stats.shotsA * (0.3 + Math.random() * 0.2));
+        matchState.stats.shotsOnTargetB = Math.round(matchState.stats.shotsB * (0.3 + Math.random() * 0.2));
+
+        let currentMin = 0;
+        addCommentaryLine(0, "裁判一声哨响！全场比赛正式开始！");
+
+        const interval = setInterval(() => {
+            currentMin += Math.floor(Math.random() * 7) + 3;
+            if (currentMin >= 90) {
+                currentMin = 90;
+                clearInterval(interval);
+                addCommentaryLine(90, "随着主裁判的三声长哨，全场比赛结束！观众朋友们，这是一场荡气回肠的较量！");
+                document.getElementById("btn-to-post").classList.remove("hidden");
+            } else {
+                triggerRandomEvent(currentMin);
+            }
+            document.getElementById("live-clock").innerText = `${currentMin.toString().padStart(2, '0')}:00`;
+            box.scrollTop = box.scrollHeight;
+        }, 800);
+    }
+
+    function addCommentaryLine(min, text, isGoal = false) {
+        const box = document.getElementById("commentary-box");
+        const line = document.createElement("div");
+        line.className = "commentary-line";
+        if (isGoal) line.classList.add("c-goal");
+
+        line.innerHTML = `<span class="c-time">${min}'</span><span class="c-text">${text}</span>`;
+        box.appendChild(line);
+    }
+
+    function triggerRandomEvent(min) {
+        const isA = Math.random() < (matchState.dataA.strength / (matchState.dataA.strength + matchState.dataB.strength));
+        const attackTeam = isA ? matchState.teamA : matchState.teamB;
+        const attackSquad = isA ? matchState.dataA.squad : matchState.dataB.squad;
+        
+        if (isA) { matchState.stats.keyPassesA += Math.random() > 0.5 ? 1 : 0; matchState.stats.dribblesA += 1; }
+        else { matchState.stats.keyPassesB += Math.random() > 0.5 ? 1 : 0; matchState.stats.dribblesB += 1; }
+
+        let action = "";
+        
+        // 判定是否是星巴明星队触发专属剧情解说
+        if (attackTeam === "星巴明星队" && Math.random() > 0.3) {
+            action = simbaStarActions[Math.floor(Math.random() * simbaStarActions.length)];
+        } else {
+            const player = attackSquad[Math.floor(Math.random() * 6) + 5];
+            action = actionTexts[Math.floor(Math.random() * actionTexts.length)];
+            action = action.replace("{team}", attackTeam).replace("{player}", player);
+        }
+
+        const isGoal = Math.random() < 0.22; // 进球概率提升一点让比赛更刺激
+        if (isGoal) {
+            if (isA) matchState.scoreA++; else matchState.scoreB++;
+            document.getElementById("live-score").innerText = `${matchState.scoreA} - ${matchState.scoreB}`;
+            const goalDesc = goalTexts[Math.floor(Math.random() * goalTexts.length)];
+            addCommentaryLine(min, `${action} ${goalDesc} 场上比分改写为 ${matchState.scoreA}-${matchState.scoreB}！`, true);
+        } else {
+            const save = saveTexts[Math.floor(Math.random() * saveTexts.length)];
+            addCommentaryLine(min, `${action} ${save}`);
+        }
+    }
+
+    function showPostMatch() {
+        document.getElementById("panel-live").classList.add("hidden");
+        document.getElementById("panel-post").classList.remove("hidden");
+
+        const table = document.getElementById("stats-table");
+        table.innerHTML = `
+            <tr><th>${matchState.teamA}</th><th>技术统计</th><th>${matchState.teamB}</th></tr>
+            <tr class="stats-row-bg"><td>${matchState.scoreA}</td><td><b>总比分</b></td><td>${matchState.scoreB}</td></tr>
+            <tr><td>${matchState.stats.possessionA}%</td><td>控球率</td><td>${matchState.stats.possessionB}%</td></tr>
+            <tr class="stats-row-bg"><td>${matchState.stats.shotsA}</td><td>射门次数</td><td>${matchState.stats.shotsB}</td></tr>
+            <tr><td>${matchState.stats.shotsOnTargetA}</td><td>射正次数</td><td>${matchState.stats.shotsOnTargetB}</td></tr>
+            <tr class="stats-row-bg"><td>${matchState.stats.keyPassesA + 4}</td><td>关键传球</td><td>${matchState.stats.keyPassesB + 4}</td></tr>
+            <tr><td>${matchState.stats.dribblesA + 3}</td><td>成功过人</td><td>${matchState.stats.dribblesB + 3}</td></tr>
+        `;
+
+        document.getElementById("rate-title-a").innerText = matchState.teamA;
+        document.getElementById("rate-title-b").innerText = matchState.teamB;
+
+        generatePlayerRatings("rate-list-a", matchState.dataA.squad, matchState.scoreA > matchState.scoreB, matchState.teamA);
+        generatePlayerRatings("rate-list-b", matchState.dataB.squad, matchState.scoreB > matchState.scoreA, matchState.teamB);
+
+        let review = "";
+        if (matchState.scoreA === matchState.scoreB) {
+            review = `【贺炜频道点评】：自古打天下难，守天下更难。今天${matchState.teamA}与${matchState.teamB}就像两名绝顶剑客，在紫禁之巅留下了一段佳话。这是一场足以载入时空史册的平局，双方在90分钟内展现了足球最纯粹的魅力，不分伯仲。`;
+        } else {
+            const winner = matchState.scoreA > matchState.scoreB ? matchState.teamA : matchState.teamB;
+            const loser = matchState.scoreA > matchState.scoreB ? matchState.teamB : matchState.teamA;
+            const scoreW = Math.max(matchState.scoreA, matchState.scoreB);
+            const scoreL = Math.min(matchState.scoreA, matchState.scoreB);
+            
+            if (winner === "星巴明星队") {
+                review = `【黄健翔频道狂吼】：伟大的胜利！星巴明星队万岁！坎特的防守，皮尔洛的调度，巴乔的绝对核心统治力！他们不是十一只无头苍蝇，他们汇聚了整个时代的荣光！这是一场神级战术的伟大胜利，完美的执行力彻底撕碎了${loser}的防线！事实证明，解放巴乔的防守任务是世界足坛最天才的决定！`;
+            } else if (loser === "星巴明星队") {
+                review = `【贺炜频道点评】：生活就是这样，你永远不知道下一块巧克力是什么味道。星巴明星队虽然遗憾败北，但他们的浪漫主义足球依然闪耀。恭喜${winner}，他们用极高的战术素养和团队协同，赢下了这场不可思议的跨时空之战。`;
+            } else {
+                review = `【贺炜频道点评】：请不要相信，胜利就像山坡上的蒲公英一样唾手可得。但请相信，世上总有美好值得我们全力以赴。${winner}今天顶住了巨大的压力，用 ${scoreW}-${scoreL} 的比分击退了${loser}。罗曼·罗兰说过，世界上只有一种真正的英雄主义，那就是认清生活的真相后依然热爱它。恭喜${winner}的球迷们，今夜的星空为你们闪烁！`;
+            }
+        }
+        document.getElementById("post-media-review").innerText = review;
+    }
+
+    function generatePlayerRatings(targetId, squad, isWinner, teamName) {
+        const container = document.getElementById(targetId);
+        container.innerHTML = "";
+        
+        const highComments = ["宛如暗夜里的光，照亮了球队前行的路。", "统治级的核心表现，全场无处不在的焦点。", "发挥犹如天神下凡，以一己之力改变了比赛走势。", "技术动作充满诗意，是球场上的艺术家。"];
+        const midComments = ["中规中矩，像齿轮一样咬合着球队的正常运转。", "勤勉的奔跑，踏实地完成了主教练交代的战术任务。", "发挥稳定，无球跑动与传切时机把握得相当老道。"];
+        const lowComments = ["状态似乎迷失在今夜的星空中，失误略多。", "好像没带射门靴，防守落位也屡次出现迟疑。", "游离于战术体系之外，赛后需要好好总结。"];
+
+        squad.forEach((name, idx) => {
+            let baseRating = 6.0 + (isWinner ? 0.8 : -0.2) + (Math.random() * 2.5);
+            
+            // 星巴明星队特殊光环加成
+            if (teamName === "星巴明星队") {
+                if (name.includes("巴乔")) baseRating = 9.2 + Math.random() * 0.7; 
+                if (name.includes("皮尔洛") || name.includes("坎特")) baseRating = 8.5 + Math.random() * 1.0;
+                if (name.includes("卡恩")) baseRating = 8.0 + Math.random() * 1.5;
+            } else {
+                if (idx >= 8 && isWinner && Math.random() > 0.4) baseRating += 1.0; 
+            }
+            
+            baseRating = Math.min(10, Math.max(4.5, baseRating)).toFixed(1);
+
+            let comment = "";
+            
+            // 特殊球员定制评语
+            if (teamName === "星巴明星队") {
+                if (name.includes("巴乔")) comment = "宛如天神下凡！完美执行了不防守战术，在禁区内翻江倒海，把定位球当成了艺术展。";
+                else if (name.includes("坎特")) comment = "地球上71%被水覆盖，剩下的都被坎特覆盖。完美的单后腰扫荡。";
+                else if (name.includes("皮尔洛")) comment = "中场节拍器，犹如戴着顶级腕表的指挥家，精准直塞撕裂防线。";
+                else if (name.includes("托尼")) comment = "重型坦克般的完美支点，甘当绿叶，为巴乔扯出了太平洋一般宽阔的空间。";
+                else if (name.includes("贝尔")) comment = "边路超跑，传给两秒后的自己，强力突破让对方防线胆寒。";
+                else if (name.includes("劳德鲁普")) comment = "极具灵性的内切，如风一般自由，在前场完美串联起了进攻线。";
+                else if (name.includes("卡恩")) comment = "一声怒吼震慑敌胆，门线上的定海神针，一夫当关万夫莫开。";
+                else if (baseRating >= 7.5) comment = "发挥极其稳定，是球队筑起钢铁长城的重要基石。";
+                else comment = midComments[Math.floor(Math.random() * midComments.length)];
+            } else {
+                if (baseRating >= 8.5) comment = highComments[Math.floor(Math.random() * highComments.length)];
+                else if (baseRating >= 7.0) comment = midComments[Math.floor(Math.random() * midComments.length)];
+                else comment = lowComments[Math.floor(Math.random() * lowComments.length)];
+            }
+
+            const row = document.createElement("div");
+            row.className = "player-rate-row";
+            row.innerHTML = `<span>${name}</span><span class="p-score">${baseRating} <small style="color:var(--text-muted)">(${comment})</small></span>`;
+            container.appendChild(row);
+        });
+    }
+
+    function resetSimulator() {
+        document.getElementById("panel-post").classList.add("hidden");
+        document.getElementById("btn-to-post").classList.add("hidden");
+        document.getElementById("panel-setup").classList.remove("hidden");
+    }
+</script>
+
+</body>
+</html>
